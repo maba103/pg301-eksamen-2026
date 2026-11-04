@@ -1,4 +1,5 @@
-name: Build and Push to ECR
+
+name: Build, Push and Deploy
 
 on:
   push:
@@ -35,3 +36,36 @@ jobs:
             docker tag wishifai:latest 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:$IMAGE_TAG
             docker push 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:$IMAGE_TAG
           fi
+
+  terraform:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform format check
+        run: terraform -chdir=infra fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform -chdir=infra init -input=false
+
+      - name: Terraform validate
+        run: terraform -chdir=infra validate
+
+      - name: Terraform apply
+        env:
+          TF_VAR_candidate_number: "7"
+          TF_VAR_image_tag: ${{ github.sha }}
+        run: terraform -chdir=infra apply -input=false -auto-approve
