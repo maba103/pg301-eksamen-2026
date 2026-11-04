@@ -24,8 +24,14 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker image
+            - name: Build and push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t wishifai .
-          docker tag wishifai:latest 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:${{ github.sha }}
-          docker push 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:${{ github.sha }}
+          if aws ecr describe-images --repository-name wishifai --image-ids imageTag=$IMAGE_TAG --region eu-west-1 >/dev/null 2>&1; then
+            echo "Image already exists. Skipping push."
+          else
+            docker tag wishifai:latest 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:$IMAGE_TAG
+            docker push 244530008913.dkr.ecr.eu-west-1.amazonaws.com/wishifai:$IMAGE_TAG
+          fi
