@@ -68,4 +68,4 @@ jobs:
         env:
           TF_VAR_candidate_number: "7"
           TF_VAR_image_tag: ${{ github.sha }}
-        run: terraform -chdir=infra apply -input=false -auto-approve
+        run: terraform -chdir=infra apply -input=false -auto-approve -var="candidate_number=7" -var="image_tag=${{ github.sha }}"
