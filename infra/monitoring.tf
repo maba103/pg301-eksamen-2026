@@ -111,6 +111,6 @@ resource "aws_cloudwatch_metric_alarm" "bedrock_latency" {
   namespace           = "Wishifai"
   period              = 60
   statistic           = "Maximum"
-  threshold           = 30
+  threshold           = 30000
   treat_missing_data  = "notBreaching"
 }
